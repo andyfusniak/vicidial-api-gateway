@@ -9,6 +9,7 @@ use Ifp\Vicidial\Exception\VicidialException;
 try {
     $apiGateway = new VicidialApiGateway();
     $apiGateway->setConnectionTimeoutSeconds(5)
+               ->setHost('202.176.90.83')
                ->setAction(VicidialApiGateway::ACTION_ADD_LEAD)
                ->setUser('robot')
                ->setPass('w4J83dmA5MTDDJV6')
@@ -26,12 +27,16 @@ try {
     throw $e;
 }
 
-var_dump($apiGateway->getHttpQueryUri());
+echo 'Calling URI: ' . $apiGateway->getHttpQueryUri() . PHP_EOL;
 
 try {
     $result = $apiGateway->apiCall();
     if (true === $result) {
-        echo 'API Call Successful';
+        echo 'API Call Success' . PHP_EOL;
+        echo $apiGateway->getApiResponseMessage();
+    } else if (false === $result) {
+        echo 'API Call Error' . PHP_EOL;
+        echo $apiGateway->getApiResponseMessage();
     }
 } catch (\Excepton $e) {
     throw $e;

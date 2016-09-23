@@ -42,6 +42,11 @@ class VicidialApiGateway
     protected $host;
 
     /**
+     * @var string last message response from the previous API call
+     */
+    protected $apiMessage;
+
+    /**
      * @var int timeout in seconds
      */
     protected $timeoutSeconds = self::DEFAULT_TIMEOUT_SECONDS;
@@ -49,7 +54,7 @@ class VicidialApiGateway
     /**
      * @var string unencoded resource of the api
      */
-    protected $resource = 'non_agent_api.php';
+    protected $resource = 'vicidial/non_agent_api.php';
 
     /**
      * @var string unencoded function action to perform
@@ -118,11 +123,90 @@ class VicidialApiGateway
         return $this->timeoutSeconds;
     }
 
-    protected function forceRecompileUri()
+    /**
+     * When any part of the URI changes such as host, resource
+     * or indeed any part of the URI, set a flag to force the
+     * URI to be recompiled and clear the URI and last API call
+     * response.
+     */
+    private function forceRecompileUri()
     {
         if (true === $this->uriBuilt) {
+            $this->queryUri = null;
             $this->uriBuilt = false;
+            $this->apiMessage = null;
         }
+    }
+
+    /**
+     * The VICIdial HTTP API is not RESTful and all calls are
+     * made using HTTP GET requests.  Any call, successful or not
+     * will return a 200 OK response.  To know if the call was succesful
+     * from the perspective of the vicidial application, we must exam
+     * the response body to see if it starts with the string "ERROR:"
+     *
+     * @return bool true if the response message is an error response
+     */
+    private function hasReturnedError($response)
+    {
+        return ('ERROR:' === substr($response, 0, 6));
+    }
+
+    /**
+     * See if body response indicates success
+     * 
+     * @see hasReturnedError
+     */
+    private function hasReturnedSuccess($reponse)
+    {
+        return ('SUCCESS:' === substr($response, 0, 8));;
+    }
+
+    /**
+     * Set the host server
+     *
+     * @param string $host the hostname
+     * @return VicidialApiGateway
+     */
+    public function setHost($host)
+    {
+        $this->host = (string) $host;
+        $this->forceRecompileUri();
+	return $this;
+    }
+
+    /**
+     * Get the host server
+     *
+     * @return string the hostname
+     */
+    public function getHost()
+    {
+        return $this->host;
+    }
+
+    /**
+     * Set the resource part of the URI
+     * i.e The {resource} part in the following URI example:
+     * http://domain.com/{resource}?name=value&name2=value2
+     *
+     * @param string $resource the resource part
+     * @return VicidialApiGateway
+     */
+    public function setResource($resource)
+    {
+        $this->resource = (string) $resource;
+        return $this;
+    }
+
+    /**
+     * Get the resource part of the URI
+     *
+     * @return string
+     */
+    public function getResource()
+    {
+        return $this->resource;
     }
 
     /**
@@ -260,21 +344,27 @@ class VicidialApiGateway
             return $this->queryUri;
         }
 
+        if ((null === $this->host) || (empty($this->host))) {
+            throw new Exception\VicidialException(
+                'Failed to compile HTTP API URI as host server has not been set'
+            );
+        }
+
         if ((null === $this->action) || (empty($this->action))) {
             throw new Exception\VicidialException(
-                'Failed to compile HTTP Query URI as action has not been set'
+                'Failed to compile HTTP API URI as action has not been set'
             );
         }
 
         if ((null === $this->user) || (empty($this->user))) {
             throw new Exception\VicidialException(
-                'Failed to compile HTTP Query URI as user has not been set'
+                'Failed to compile HTTP API URI as user has not been set'
             );
         }
 
         if ((null === $this->pass) || (empty($this->pass))) {
             throw new Exception\VicidialException(
-                'Failed to compile HTTP Query URI as pass has not been set'
+                'Failed to compile HTTP API URI as pass has not been set'
             );
         }
 
@@ -287,41 +377,79 @@ class VicidialApiGateway
             }
         }
 
+        //http://202.176.90.83/non_agent_api.php?function=add_lead&user=robot$pass=w4J83dmA5MTDDJV6phone_number=100001phone_code=44list_id=30000custom_fields=YLINEID=applesfirst_name=Fredsource=testlast_name=Blogs
         //http://202.176.90.83/vicidial/non_agent_api.php?source=test&user=robot&pass=w4J83dmA5MTDDJV6&function=add_lead&phone_number=100001&phone_code=44&list_id=30000&custom_fields=Y&LINEID=joe&skype=john&first_name=Bob&last_name=Wilson&shoe_size=fat%20feet
 
         // compulsory query parameters
         $this->queryUri = $this->protocol
                         . $this->host
                         . '/' . $this->resource
-                        . 'function=' . urlencode($this->action)
-                        . '&user=' . urlencode($user)
-                        . '$pass=' . urlencode($pass);
+                        . '?function=' . urlencode($this->action)
+                        . '&user=' . urlencode($this->user)
+                        . '&pass=' . urlencode($this->pass);
 
         // optional query parameters
         foreach ($this->params as $key => $value) {
-            $this->queryUri .= $key . '=' . urlencode($value);
+            $this->queryUri .= '&' . $key . '=' . urlencode($value);
         }
 
         $this->uriBuilt = true;
         return $this->getHttpQueryUri();
     }
 
+    /**
+     * Get the message response from the last call to the API
+     * You must make a call to the API before calling
+     *
+     * @return string the last API message response
+     * @throws Exception\VicidialException
+     */
+    public function getApiResponseMessage()
+    {
+        if (null === $this->apiMsg) {
+            throw new Exception\VicidialExecption(
+                'You must call apiCall() before calling getApiMessage()'
+            );
+        }
+        return $this->apiMsg;
+    }
+
     public function apiCall()
     {
         try {
-            $curl = \curl_init();
-
+            $curl = curl_init();
+            $uri = $this->getHttpQueryUri();
             curl_setopt_array($curl, [
                 CURLOPT_RETURNTRANSFER => 1,
                 CURLOPT_CONNECTTIMEOUT => $this->getConnectionTimeoutSeconds(),
-                CURLOPT_URL => $$this->getHttpQueryUri(),
+                CURLOPT_URL => $uri,
                 CURLOPT_USERAGENT => self::USER_AGENT_STRING
             ]);
             $response = curl_exec($curl);
             curl_close($curl);
 
-            return true;
-        } catch (Exception\VicidialApiGateway $e) {
+            if (false === $response) {
+                throw new Exception\VicidialException(sprintf(
+                    '%s: curl_exec("%s") failed',
+                    __METHOD__,
+                    $uri
+                ));
+            }
+
+            if ($this->hasReturnedError($response)) {
+                $this->apiMsg = $response;
+                return false;
+            }
+
+            if ($this->hasReturnedSuccess($response)) {
+                $this->apiMsg = $response;
+                return true;
+            }
+
+            // we're not sure what has been returned, so record it and retun failure
+            $this->apiMsg = $response;
+            return false;
+        } catch (Exception\VicidialException $e) {
             throw $e;
         } catch (\Exception $e) {
             throw $e;
