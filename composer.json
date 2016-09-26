@@ -1,9 +1,15 @@
 {
     "name": "ifp/vicidial-api-gateway",
-    "php": ">=5.4.0",
     "autoload": {
         "psr-4": {
             "Ifp\\": "src/Ifp/"
         }
+    },
+    "config": {
+        "disable-tls": true
+    },
+    "require": {
+        "php": ">=5.4.0",
+        "ext-curl": "*"
     }
 }
