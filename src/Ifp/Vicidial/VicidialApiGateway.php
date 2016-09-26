@@ -157,7 +157,7 @@ class VicidialApiGateway
      * 
      * @see hasReturnedError
      */
-    private function hasReturnedSuccess($reponse)
+    private function hasReturnedSuccess($response)
     {
         return ('SUCCESS:' === substr($response, 0, 8));;
     }
