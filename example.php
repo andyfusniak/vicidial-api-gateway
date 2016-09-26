@@ -1,7 +1,5 @@
 <?php
-require './Ifp/Vicidial/VicidialApiGateway.php';
-require './Ifp/Vicidial/Exception/ExceptionInterface.php';
-require './Ifp/Vicidial/Exception/VicidialException.php';
+require_once './vendor/autoload.php';
 
 use Ifp\Vicidial\VicidialApiGateway;
 use Ifp\Vicidial\Exception\VicidialException;
