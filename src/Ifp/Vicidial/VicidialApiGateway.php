@@ -12,6 +12,11 @@ class VicidialApiGateway
     const USER_AGENT_STRING = 'VicidialApiGateway';
     const DEFAULT_TIMEOUT_SECONDS = 15; 
 
+    const REQUIRED_PARAM_PHONE_NUMBER = 'phone_number';
+    const REQUIRED_PARAM_PHONE_CODE = 'phone_code';
+    const REQUIRED_PARAM_LIST_ID = 'list_id';
+    const REQUIRED_PARAM_SOURCE = 'source';
+
     /**
      * @var array of supported function actions
      */
@@ -24,10 +29,14 @@ class VicidialApiGateway
      */
     protected static $requiredFields = [
         self::ACTION_ADD_LEAD => [
-            'phone_number' => 'must be all numbers, 6-16 digits',
-            'phone_code'   => 'must be all numbers, 1-4 digits, defaults to 1 if not set',
-            'list_id'      => 'must be all numbers, 3-12 digits, defaults to 999 if not set',
-            'source'       => 'description of what originated the API call (maximum 20 characters)'
+            self::REQUIRED_PARAM_PHONE_NUMBER =>
+                'must be all numbers, 6-16 digits',
+            self::REQUIRED_PARAM_PHONE_CODE =>
+                'must be all numbers, 1-4 digits, defaults to 1 if not set',
+            self::REQUIRED_PARAM_LIST_ID =>
+                'must be all numbers, 3-12 digits, defaults to 999 if not set',
+            self::REQUIRED_PARAM_SOURCE =>
+                'description of what originated the API call (maximum 20 characters)'
         ]
     ];
 
