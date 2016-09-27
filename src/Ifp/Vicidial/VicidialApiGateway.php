@@ -181,7 +181,7 @@ class VicidialApiGateway
     {
         $this->host = (string) $host;
         $this->forceRecompileUri();
-	return $this;
+	    return $this;
     }
 
     /**
@@ -421,6 +421,18 @@ class VicidialApiGateway
             );
         }
         return $this->apiMsg;
+    }
+
+    /**
+     * Reset the instance so it can be reused for subsequent api calls
+     */
+    public function softReset()
+    {
+        $this->apiMessage = null;
+        $this->action = null;
+        $this->uriBuilt = false;
+        $this->queryUri = '';
+        $this->params = [];
     }
 
     public function apiCall()
