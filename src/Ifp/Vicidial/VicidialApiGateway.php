@@ -426,7 +426,7 @@ class VicidialApiGateway
     /**
      * Reset the instance so it can be reused for subsequent api calls
      */
-    public softReset()
+    public function softReset()
     {
         $this->apiMessage = null;
         $this->action = null;
