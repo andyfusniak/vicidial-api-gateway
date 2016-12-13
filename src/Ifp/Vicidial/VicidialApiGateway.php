@@ -286,7 +286,7 @@ class VicidialApiGateway
     }
 
     /**
-     * Add a query parameter pair
+     * Add or update a query parameter pair
      *
      * @param string $name parameter name
      * @param mixed $value to send
@@ -296,18 +296,9 @@ class VicidialApiGateway
     public function addParam($name, $value = null)
     {
         if (null === $value) {
-            throw new \InvalidArgumentException(sprintf(
-                '%s: missing or null value passed in second parameter $value ',
-                __METHOD__
-            ));
+            $value = '';
         }
 
-        if (array_key_exists($name, $this->params)) {
-            throw new Exception\VicidialException(sprintf(
-                'Parameter "%s" has already been set',
-                $name
-            ));
-        }
         $this->params[$name] = $value;
         $this->forceRecompileUri();
         return $this;
