@@ -1,12 +1,18 @@
 {
     "name": "ifp/vicidial-api-gateway",
+    "authors": [
+        {
+            "name": "Andy Fusniak",
+            "email": "andy@greycatmedia.co.uk"
+        }
+    ],
     "autoload": {
         "psr-4": {
             "Ifp\\": "src/Ifp/"
         }
     },
     "config": {
-        "disable-tls": true
+        "disable-tls": false
     },
     "require": {
         "php": ">=5.4.0",

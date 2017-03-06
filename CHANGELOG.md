@@ -1,4 +1,7 @@
 # CHANGELOG
+## 1.1.1 (6 Mar 2017)
+- Tidy composer.json package file
+
 ## 1.1.0 (6 Mar 2017)
 - Add non-default ports to URI construction. e.g. api.example.com:8080/resource
 
