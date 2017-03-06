@@ -51,6 +51,11 @@ class VicidialApiGateway
     protected $host;
 
     /**
+     * @var string port number (default 80)
+     */
+    protected $port = 80;
+
+    /**
      * @var string last message response from the previous API call
      */
     protected $apiMessage;
@@ -192,6 +197,28 @@ class VicidialApiGateway
     public function getHost()
     {
         return $this->host;
+    }
+
+    /**
+     * Set the port
+     *
+     * @param string $port the port if HTTP is running on a different port
+     * @return VicidialApiGateway
+     */
+    public function setPort($port)
+    {
+        $this->port = (string) $port;
+        return $this;
+    }
+
+    /**
+     * Get the port
+     *
+     * @return string the port
+     */
+    public function getPort()
+    {
+        return $this->port;
     }
 
     /**
@@ -383,6 +410,7 @@ class VicidialApiGateway
         // compulsory query parameters
         $this->queryUri = $this->protocol
                         . $this->host
+                        . (('80' !== $this->port) ? (':' . $this->port) : '')
                         . '/' . $this->resource
                         . '?function=' . urlencode($this->action)
                         . '&user=' . urlencode($this->user)
